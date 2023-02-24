@@ -1,0 +1,145 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+library(move)
+library(momentuHMM)
+library(furrr)
+```
+
+```{r}
+login <- movebankLogin(username = "LA_Berigan", password="33szcNUtv4iyPGU")
+
+amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = login, removeDuplicatedTimestamps=TRUE, timestamp_end = "20220731000000000") %>% as.data.frame()
+
+amwo_data <- amwo_data %>%
+  transmute(ID = local_identifier,
+            time = timestamp,
+            date = strftime(timestamp, format="%Y-%m-%d"),
+            x = location_long,
+            y = location_lat,
+            tagtype = comments,
+            sex = sex,
+            age = taxon_detail,
+            altitude = height_above_msl)
+```
+
+Remove individuals with fewer than 3 locations, recording which ones were removed
+```{r}
+individuals_removed_for_too_few_locations <- amwo_data %>%
+  distinct(ID, date, .keep_all = TRUE) %>% 
+  group_by(ID) %>%
+  tally() %>%
+  filter(n < 3) %>%
+  pull(ID)
+
+birds_to_keep <- amwo_data %>%
+  distinct(ID, date, .keep_all = TRUE) %>% 
+  group_by(ID) %>%
+  tally() %>%
+  filter(n > 2) %>%
+  pull(ID)
+
+amwo_data <- amwo_data %>%
+  filter(ID %in% birds_to_keep)
+```
+
+Trial code: reduce to a few individuals with known deaths to see if this works
+```{r}
+amwo_data_subsampled <- amwo_data %>% 
+  filter(ID %in% c("VA-2019-24", "NJ-2019-26", "NJ-2019-25", "LA-2022-14", "NJ-2018-14", "SC-2019-09", "SC-2019-04")) %>% 
+  dplyr::select(ID, time, x, y) %>% 
+  mutate(test = FALSE) %>% 
+  group_by(ID) %>%
+  mutate(ranks = row_number()) %>%
+  mutate(known = ifelse(ranks == 1, 1, NA)) %>%
+  ungroup() %>% 
+  dplyr::select(-ranks)
+```
+
+Upload data from the ground test, which serves as a training dataset, and joining to the main dataset
+```{r}
+ground_test <- read_csv("ground_test_2_rformat.csv", 
+                        col_types = cols(`GMT Time` = col_datetime(format = "%m/%d/%Y %H:%M"))) %>% 
+  transmute(ID = as.character(id),
+         time = `GMT Time`,
+         x = Longitude,
+         y = Latitude,
+         test = TRUE) %>% 
+  group_by(ID) %>%
+  mutate(ranks = row_number()) %>%
+  mutate(known = ifelse(ranks == max(ranks), NA, NA)) %>% 
+  ungroup() %>% 
+  dplyr::select(-ranks)
+
+amwo_data_subsampled <- bind_rows(amwo_data_subsampled, ground_test)
+```
+
+Determine the mean distance to the nearest 5 points
+```{r}
+plan(sequential)
+
+amwo_data_subsampled$mean_dist_5 <- amwo_data_subsampled %>% 
+  dplyr::select(ID, x, y) %>% 
+  future_pmap(function(ID_iter, x_iter, y_iter){
+    
+    iter_sf <- data.frame(x = x_iter, y = y_iter) %>% 
+      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE)
+    
+    other_locs <- amwo_data_subsampled %>%
+      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE) %>%
+      filter(ID == ID_iter)
+    
+    st_distance(x = iter_sf, y = other_locs) %>% 
+      as.numeric() %>%
+      sort() %>%
+      .[2:6] %>% 
+      mean(na.rm = TRUE) %>% 
+      return()
+  }) %>% 
+  unlist()
+
+plan(sequential)
+```
+
+```{r}
+amwo_hmm <- amwo_data_subsampled %>% 
+  as.data.frame() %>% 
+  prepData(type = "LL")
+```
+
+```{r}
+stateNames <- c("live", "dead")
+dist <- list(step="gamma", angle="wrpcauchy", mean_dist_5 = "norm")
+fixPar <- list(beta=matrix(c(NA, -1000), nrow = 1, byrow = TRUE)) 
+Par0_m1 <- list(step=c(5, 0.005,
+                       100, 0.005,
+                       0.1, 0.1),
+                angle = c(0.001, 0.001,
+                          0.99, 0.99),
+                mean_dist_5 = c(mean(amwo_hmm$mean_dist_5), 0.0005,
+                                sd(amwo_hmm$mean_dist_5), 0.005))
+ks <- amwo_hmm$known
+```
+
+
+```{r}
+mod <- fitHMM(data=amwo_hmm, nbStates=2, dist=dist, Par0 = Par0_m1,
+               estAngleMean = list(angle=TRUE),
+               fixPar=fixPar,
+               #userBounds = userBounds,
+               #workBounds = workBounds,
+               #DM = DM,
+               knownStates = ks,
+               #formula = ~step_cov, #state 2 to 3. page 47 of vignette shows how to create the beta matrix
+               stateNames = stateNames)
+  
+mod_vit <- cbind(amwo_hmm, viterbi(mod))
+
+mod
+```
+
