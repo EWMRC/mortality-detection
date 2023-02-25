@@ -2,6 +2,7 @@
 title: "R Notebook"
 output: html_notebook
 ---
+First time running this code? Run "write_movebank_credentials.R" first.
 
 ```{r}
 library(tidyverse)
@@ -12,9 +13,7 @@ library(furrr)
 ```
 
 ```{r}
-login <- movebankLogin(username = "LA_Berigan", password="33szcNUtv4iyPGU")
-
-amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = login, removeDuplicatedTimestamps=TRUE, timestamp_end = "20220731000000000") %>% as.data.frame()
+amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = readRDS("movebank_credentials.rds"), removeDuplicatedTimestamps=TRUE, timestamp_end = "20220731000000000") %>% as.data.frame()
 
 amwo_data <- amwo_data %>%
   transmute(ID = local_identifier,
@@ -78,7 +77,7 @@ ground_test <- read_csv("ground_test_2_rformat.csv",
   ungroup() %>% 
   dplyr::select(-ranks)
 
-amwo_data_subsampled <- bind_rows(amwo_data_subsampled, ground_test)
+amwo_data_subsampled <- bind_rows(ground_test, amwo_data_subsampled)
 ```
 
 Determine the mean distance to the nearest 5 points

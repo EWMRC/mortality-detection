@@ -1,3 +1,6 @@
+# Movebank credentials
+movebank_credentials.rds
+
 # History files
 .Rhistory
 .Rapp.history
