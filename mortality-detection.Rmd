@@ -108,6 +108,60 @@ amwo_data_subsampled$mean_dist_5 <- amwo_data_subsampled %>%
 plan(sequential)
 ```
 
+Determine the mean distance to the nearest 10 points
+```{r}
+plan(sequential)
+
+amwo_data_subsampled$mean_dist_10 <- amwo_data_subsampled %>% 
+  dplyr::select(ID, x, y) %>% 
+  future_pmap(function(ID_iter, x_iter, y_iter){
+    
+    iter_sf <- data.frame(x = x_iter, y = y_iter) %>% 
+      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE)
+    
+    other_locs <- amwo_data_subsampled %>%
+      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE) %>%
+      filter(ID == ID_iter)
+    
+    st_distance(x = iter_sf, y = other_locs) %>% 
+      as.numeric() %>%
+      sort() %>%
+      .[2:11] %>% 
+      mean(na.rm = TRUE) %>% 
+      return()
+  }) %>% 
+  unlist()
+
+plan(sequential)
+```
+
+Determine the mean distance to the nearest 15 points
+```{r}
+plan(sequential)
+
+amwo_data_subsampled$mean_dist_15 <- amwo_data_subsampled %>% 
+  dplyr::select(ID, x, y) %>% 
+  future_pmap(function(ID_iter, x_iter, y_iter){
+    
+    iter_sf <- data.frame(x = x_iter, y = y_iter) %>% 
+      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE)
+    
+    other_locs <- amwo_data_subsampled %>%
+      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE) %>%
+      filter(ID == ID_iter)
+    
+    st_distance(x = iter_sf, y = other_locs) %>% 
+      as.numeric() %>%
+      sort() %>%
+      .[2:16] %>% 
+      mean(na.rm = TRUE) %>% 
+      return()
+  }) %>% 
+  unlist()
+
+plan(sequential)
+```
+
 ```{r}
 amwo_hmm <- amwo_data_subsampled %>% 
   as.data.frame() %>% 
@@ -116,17 +170,21 @@ amwo_hmm <- amwo_data_subsampled %>%
 
 ```{r}
 stateNames <- c("live mig", "live stop", "dead") #"live stop"
-dist <- list(step="gamma", angle="wrpcauchy", mean_dist_5 = "norm")
+dist <- list(step="gamma", angle="wrpcauchy", mean_dist_15 = "norm") #mean_dist_5 = "norm", mean_dist_10 = "norm",
 
 fixPar <- list(beta=matrix(c(NA, NA, NA, NA, -1000, -1000), nrow = 1, byrow = TRUE))
 # 
-Par0_m1 <- list(step=c(17.21056, 0.06303367, 0.0137,
-                       41.89105, 0.09649169, 0.0233,
-                       0.001, 0.01988665, 0.1),
-                angle = c(-3.0765975, -3.1148101, -3.1148101,
-                          0.2502375, 0.3963267, 0.3963267),
-                mean_dist_5 = c(10669.25, 14.32994, 5.72,
-                                38477.76, 38477.76, 14.7))
+Par0_m1 <- list(step=c(27.65267, 0.143942491, 0.01349499,
+                       63.35321, 0.212567737, 0.01235371,
+                       0.001, 0.002383503, 0.02842554),
+                angle = c(3.1051583, 3.1136461, -3.0911715,
+                          0.5042311, 0.2632081, 0.4294835),
+                # mean_dist_5 = c(17216.08, 15.04497, 4.857182,
+                #                 47633.62, 14.31838, 12.161531),
+                # mean_dist_10 = c(17216.08, 15.04497, 4.857182,
+                #                 47633.62, 14.31838, 12.161531),
+                mean_dist_15 = c(33528.00, 21.98520, 6.911486,
+                                86789.51, 19.83828, 13.351950))
 ks <- amwo_hmm$known
 ```
 
