@@ -72,7 +72,7 @@ ground_test <- read_csv("ground_test_2_rformat.csv",
          test = TRUE) %>% 
   group_by(ID) %>%
   mutate(ranks = row_number()) %>%
-  mutate(known = ifelse(ranks == max(ranks), NA, NA)) %>% 
+  mutate(known = ifelse(ranks == max(ranks), 2, NA)) %>% 
   ungroup() %>% 
   dplyr::select(-ranks)
 
@@ -115,7 +115,7 @@ amwo_hmm <- amwo_data_subsampled %>%
 ```{r}
 stateNames <- c("live", "dead")
 dist <- list(step="gamma", angle="wrpcauchy", mean_dist_5 = "norm")
-fixPar <- list(beta=matrix(c(NA, -1000), nrow = 1, byrow = TRUE)) 
+fixPar <- list(beta=matrix(c(NA, -100), nrow = 1, byrow = TRUE)) 
 Par0_m1 <- list(step=c(5, 0.005,
                        100, 0.005,
                        0.1, 0.1),
@@ -138,8 +138,14 @@ mod <- fitHMM(data=amwo_hmm, nbStates=2, dist=dist, Par0 = Par0_m1,
                #formula = ~step_cov, #state 2 to 3. page 47 of vignette shows how to create the beta matrix
                stateNames = stateNames)
   
-mod_vit <- cbind(amwo_hmm, viterbi(mod))
+mod_vit <- amwo_hmm %>% 
+  mutate(point_state = viterbi(mod))
 
 mod
+```
+
+Save for 
+```{r}
+saveRDS(mod_vit, file = "predicted_mortalities.rds")
 ```
 
