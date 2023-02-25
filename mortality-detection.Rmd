@@ -56,7 +56,8 @@ amwo_data_subsampled <- amwo_data %>%
   mutate(test = FALSE) %>% 
   group_by(ID) %>%
   mutate(ranks = row_number()) %>%
-  mutate(known = ifelse(ranks == 1, 1, NA)) %>%
+  mutate(known = NA) %>% 
+  #mutate(known = ifelse(ranks == 1, 1, NA)) %>%
   ungroup() %>% 
   dplyr::select(-ranks)
 ```
@@ -113,16 +114,18 @@ amwo_hmm <- amwo_data_subsampled %>%
 ```
 
 ```{r}
-stateNames <- c("live", "dead")
+stateNames <- c("live mig", "dead") #"live stop"
 dist <- list(step="gamma", angle="wrpcauchy", mean_dist_5 = "norm")
-fixPar <- list(beta=matrix(c(NA, -100), nrow = 1, byrow = TRUE)) 
-Par0_m1 <- list(step=c(5, 0.005,
-                       100, 0.005,
+
+fixPar <- list(beta=matrix(c(NA, -1000), nrow = 1, byrow = TRUE))
+# NA,	NA,	NA,	NA,	-100,	-100
+Par0_m1 <- list(step=c(5, 0.0137,
+                       100, 0.0233,
                        0.1, 0.1),
                 angle = c(0.001, 0.001,
                           0.99, 0.99),
-                mean_dist_5 = c(mean(amwo_hmm$mean_dist_5), 0.0005,
-                                sd(amwo_hmm$mean_dist_5), 0.005))
+                mean_dist_5 = c(mean(amwo_hmm$mean_dist_5), 5.72,
+                                sd(amwo_hmm$mean_dist_5), 14.7))
 ks <- amwo_hmm$known
 ```
 
