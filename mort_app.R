@@ -30,7 +30,9 @@ server <- function(input, output) {
   amwoData.sm <- readRDS("predicted_mortalities.rds")
   
   amwoData.sm %>%
-    mutate(ID = as.character(ID)) ->
+    dplyr::filter(is.na(known)) %>% #don't examine the training dataset
+    dplyr::mutate(ID = as.character(ID)) %>% 
+    filter(ID == "AL-2020-01")->
     amwoData.sm
   
   individual_stepper <- reactiveValues() #These values can be defined w/in a reactive expression and will be remembered in other reactive expressions
@@ -38,13 +40,14 @@ server <- function(input, output) {
   individual_stepper$count <- 1
   individual_stepper$current_id <- unique(amwoData.sm$ID)[1]
   individual_stepper$amwoDataID <- amwoData.sm %>%
-    filter(ID == unique(amwoData.sm$ID)[1])
+    dplyr::filter(ID == unique(amwoData.sm$ID)[1]) %>% 
+    dplyr::select("ID", "point_state", "time", "x", "y") 
+  individual_stepper$catch_df <- data.frame()
   
+  # individual_stepper$new_locations <- dplyr::filter(amwoData.sm, ID == unique(amwoData.sm$ID)[1]) %>% 
+  #   dplyr::select("ID", "point_state", "time", "x", "y") 
   
-  selected_columns <- filter(amwoData.sm, ID == unique(amwoData.sm$ID)[1]) %>% 
-    dplyr::select("ID", "point_state", "time", "step", "angle") 
-  
-  output$table <- excelTable(data = selected_columns, tableHeight = "800px") %>% 
+  output$table <- excelTable(data = individual_stepper$amwoDataID, tableHeight = "800px") %>% 
     renderExcel()
   
   getColor <- function(state) {
@@ -52,21 +55,17 @@ server <- function(input, output) {
       if(states == 1) {
         "blue"
       } else if(states == 2) {
-        "orange"
-      } else if(states == 3){
+        "orange"} 
+        else {
         "red"
-      } else if(states == 4){
-        "blue"
-      } else {
-        "red"
-      } })
+      } }) %>% unname() #to fix the JSON bug
   }
   
   individual_stepper$icons <- awesomeIcons(
     icon = 'ios-close',
     iconColor = 'black',
     library = 'ion',
-    markerColor = getColor(filter(amwoData.sm, ID == unique(amwoData.sm$ID)[1]))
+    markerColor = getColor(dplyr::filter(amwoData.sm, ID == unique(amwoData.sm$ID)[1]))
   )
   
   
@@ -83,7 +82,7 @@ server <- function(input, output) {
       addAwesomeMarkers(lng=individual_stepper$amwoDataID$x, 
                         lat=individual_stepper$amwoDataID$y, 
                         icon=individual_stepper$icons,
-                        popup = individual_stepper$amwoDataID$date) %>%  
+                        popup = individual_stepper$amwoDataID$time) %>%  
       addPolylines(lng =individual_stepper$amwoDataID$x, 
                    lat = individual_stepper$amwoDataID$y, 
                    weight=3, color="red")
@@ -91,48 +90,66 @@ server <- function(input, output) {
     
   })#end of reactive plotting
   
-  #clean locations that we start with
-  #  location_iterator <- reactive({
-  #amwoData.sm %>%  filter(ID == individual_stepper$current_ID)
-  #  }) 
-  
   #updating when go button is pressed
   observeEvent(input$goButton, {
+    
+    individual_stepper$catch_df <- rbind(individual_stepper$catch_df, individual_stepper$amwoDataID)
+    
     # Check if we've reached the end. If so, compile. If not, advance
     if(individual_stepper$count != length(unique(amwoData.sm$ID))){
       individual_stepper$count <- individual_stepper$count + 1
       individual_stepper$current_id <- unique(amwoData.sm$ID)[individual_stepper$count]
       print(individual_stepper$current_id)
+      
+      individual_stepper$amwoDataID <- subset(amwoData.sm, amwoData.sm$ID==individual_stepper$current_id) %>% 
+        dplyr::select("ID", "point_state", "time", "x", "y")
+      
+      output$table <- individual_stepper$amwoDataID %>% 
+        renderExcel(excelTable(data = ., tableHeight = "800px"))
+      
+      individual_stepper$icons <- awesomeIcons(
+        icon = 'ios-close',
+        iconColor = 'black',
+        library = 'ion',
+        markerColor = getColor(individual_stepper$amwoDataID)
+      )
     }
     else{
+      #Write the resulting file here
+      individual_stepper$catch_df %>%
+        dplyr::transmute(ID = ID,
+                         time = time,
+                         mortality_signal = ifelse(point_state %in% c(1,2), 0, 1)) %>% 
+        readr::write_csv(file = "mortality_data_movebank_upload.csv", 
+                  na = "", 
+                  eol = "\r\n")
+      
       individual_stepper$compiled <- 1
     }
-    
-    individual_stepper$amwoDataID <- subset(amwoData.sm, amwoData.sm$ID==individual_stepper$current_id)
-    
-    selected_columns <- individual_stepper$amwoDataID %>% 
-      dplyr::select("ID", "point_state", "time", "step", "angle") 
-    
-    output$table <- renderExcel(excelTable(data = selected_columns, tableHeight = "800px"))
+  })
+  
+  #Overwrite new_locations and colors with user inputs when edited
+  observeEvent(input$table,{
+    individual_stepper$amwoDataID <- excel_to_R(input$table)
     
     individual_stepper$icons <- awesomeIcons(
       icon = 'ios-close',
       iconColor = 'black',
       library = 'ion',
-      markerColor = getColor(individual_stepper$amwoDataID)
-    )
+      markerColor = getColor(individual_stepper$amwoDataID))
   })
-  
-  #  observeEvent(input$goButton,{
-  #  })individual_stepper$current_id
   
   output$compile_status <- renderText({
     if(individual_stepper$compiled == 0){
       individual_stepper$current_id
     } else{
-      "All individuals parsed"
+      "Mortality data compiled: ready for upload"
     }
   })
+  
+  # session$onSessionEnded(function() { # when the window closes, stop the app so that we can run new code
+  #   stopApp()
+  # })
 }#end of server call
 
 # Run the application 

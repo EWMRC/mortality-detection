@@ -48,9 +48,10 @@ amwo_data <- amwo_data %>%
 ```
 
 Trial code: reduce to a few individuals with known deaths to see if this works
+Now trying with full subset
 ```{r}
 amwo_data_subsampled <- amwo_data %>% 
-  filter(ID %in% c("VA-2019-24", "NJ-2019-26", "NJ-2019-25", "LA-2022-14", "NJ-2018-14", "SC-2019-09", "SC-2019-04")) %>% 
+  # filter(ID %in% c("VA-2019-24", "NJ-2019-26", "NJ-2019-25", "LA-2022-14", "NJ-2018-14", "SC-2019-09", "SC-2019-04")) %>% # Colby's identified deaths
   dplyr::select(ID, time, x, y) %>% 
   mutate(test = FALSE) %>% 
   group_by(ID) %>%
@@ -82,56 +83,56 @@ amwo_data_subsampled <- bind_rows(ground_test, amwo_data_subsampled)
 
 Determine the mean distance to the nearest 5 points
 ```{r}
-plan(sequential)
-
-amwo_data_subsampled$mean_dist_5 <- amwo_data_subsampled %>% 
-  dplyr::select(ID, x, y) %>% 
-  future_pmap(function(ID_iter, x_iter, y_iter){
-    
-    iter_sf <- data.frame(x = x_iter, y = y_iter) %>% 
-      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE)
-    
-    other_locs <- amwo_data_subsampled %>%
-      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE) %>%
-      filter(ID == ID_iter)
-    
-    st_distance(x = iter_sf, y = other_locs) %>% 
-      as.numeric() %>%
-      sort() %>%
-      .[2:6] %>% 
-      mean(na.rm = TRUE) %>% 
-      return()
-  }) %>% 
-  unlist()
-
-plan(sequential)
+# plan(sequential)
+# 
+# amwo_data_subsampled$mean_dist_5 <- amwo_data_subsampled %>% 
+#   dplyr::select(ID, x, y) %>% 
+#   future_pmap(function(ID_iter, x_iter, y_iter){
+#     
+#     iter_sf <- data.frame(x = x_iter, y = y_iter) %>% 
+#       st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE)
+#     
+#     other_locs <- amwo_data_subsampled %>%
+#       st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE) %>%
+#       filter(ID == ID_iter)
+#     
+#     st_distance(x = iter_sf, y = other_locs) %>% 
+#       as.numeric() %>%
+#       sort() %>%
+#       .[2:6] %>% 
+#       mean(na.rm = TRUE) %>% 
+#       return()
+#   }) %>% 
+#   unlist()
+# 
+# plan(sequential)
 ```
 
 Determine the mean distance to the nearest 10 points
 ```{r}
-plan(sequential)
-
-amwo_data_subsampled$mean_dist_10 <- amwo_data_subsampled %>% 
-  dplyr::select(ID, x, y) %>% 
-  future_pmap(function(ID_iter, x_iter, y_iter){
-    
-    iter_sf <- data.frame(x = x_iter, y = y_iter) %>% 
-      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE)
-    
-    other_locs <- amwo_data_subsampled %>%
-      st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE) %>%
-      filter(ID == ID_iter)
-    
-    st_distance(x = iter_sf, y = other_locs) %>% 
-      as.numeric() %>%
-      sort() %>%
-      .[2:11] %>% 
-      mean(na.rm = TRUE) %>% 
-      return()
-  }) %>% 
-  unlist()
-
-plan(sequential)
+# plan(sequential)
+# 
+# amwo_data_subsampled$mean_dist_10 <- amwo_data_subsampled %>% 
+#   dplyr::select(ID, x, y) %>% 
+#   future_pmap(function(ID_iter, x_iter, y_iter){
+#     
+#     iter_sf <- data.frame(x = x_iter, y = y_iter) %>% 
+#       st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE)
+#     
+#     other_locs <- amwo_data_subsampled %>%
+#       st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE) %>%
+#       filter(ID == ID_iter)
+#     
+#     st_distance(x = iter_sf, y = other_locs) %>% 
+#       as.numeric() %>%
+#       sort() %>%
+#       .[2:11] %>% 
+#       mean(na.rm = TRUE) %>% 
+#       return()
+#   }) %>% 
+#   unlist()
+# 
+# plan(sequential)
 ```
 
 Determine the mean distance to the nearest 15 points
@@ -208,5 +209,6 @@ mod
 Save for 
 ```{r}
 saveRDS(mod_vit, file = "predicted_mortalities.rds")
+saveRDS(individuals_removed_for_too_few_locations, file = "birds_removed.rds")
 ```
 
