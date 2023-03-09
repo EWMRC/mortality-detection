@@ -29,10 +29,21 @@ server <- function(input, output) {
   #amwoData.sm <- read.csv('HMMmale.csv')
   amwoData.sm <- readRDS("predicted_mortalities.rds")
   
+  ids_detected_mortality <- amwoData.sm %>% 
+    filter(is.na(known)) %>% 
+    mutate(ID = as.character(ID)) %>% 
+    filter(point_state == 3) %>% 
+    pull(ID) %>% 
+    unique()
+  
+  paste0("Number of birds with detected mortalities: ", length(ids_detected_mortality)) %>% 
+    print()
+  
   amwoData.sm %>%
-    dplyr::filter(is.na(known)) %>% #don't examine the training dataset
-    dplyr::mutate(ID = as.character(ID)) %>% 
-    filter(ID == "AL-2020-01")->
+    filter(is.na(known)) %>% #don't examine the training dataset
+    mutate(ID = as.character(ID)) %>% 
+    filter(ID %in% ids_detected_mortality) -> 
+    #filter(ID == "AL-2020-01") ->
     amwoData.sm
   
   individual_stepper <- reactiveValues() #These values can be defined w/in a reactive expression and will be remembered in other reactive expressions
@@ -141,7 +152,26 @@ server <- function(input, output) {
   
   output$compile_status <- renderText({
     if(individual_stepper$compiled == 0){
-      individual_stepper$current_id
+      #individual_stepper$current_id
+
+      if(any(individual_stepper$amwoDataID$point_state == 3)){
+        centroid <- individual_stepper$amwoDataID %>% 
+          filter(point_state == 3) %>%
+          summarise(x = mean(x), y = mean(y)) %>% 
+          sf::st_as_sf(coords = c("x", "y"), crs = 4326)
+        
+        threshold_dist <- individual_stepper$amwoDataID %>% 
+          filter(point_state == 3) %>%
+          sf::st_as_sf(coords = c("x", "y"), crs = 4326) %>% 
+          st_distance(centroid) %>% 
+          as.numeric() %>% 
+          quantile(probs = 0.5)
+      } else{
+        threshold_dist <- 0
+      }
+      
+      paste0("50% threshold: ", threshold_dist, " m")
+      
     } else{
       "Mortality data compiled: ready for upload"
     }
