@@ -1,0 +1,7 @@
+- At least 15 mortality points
+
+50% thresholds:
+Young forest/Aspen 4.931429
+Forest 10.854253
+Short grass 5.332848
+Tall grass 3.933362

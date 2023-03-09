@@ -13,7 +13,8 @@ ui <- fluidPage(
            actionButton("goButton", "Next"), p("Proof the next individual")
     ),
     column(width = 6,
-           excelOutput("table", height = 400))
+           excelOutput("table", height = 400),
+           actionButton("setAlive", "Set alive"), p("Set all locations to 1"))
     
   ))
 
@@ -58,7 +59,10 @@ server <- function(input, output) {
   # individual_stepper$new_locations <- dplyr::filter(amwoData.sm, ID == unique(amwoData.sm$ID)[1]) %>% 
   #   dplyr::select("ID", "point_state", "time", "x", "y") 
   
-  output$table <- excelTable(data = individual_stepper$amwoDataID, tableHeight = "800px") %>% 
+  output$table <- excelTable(data = individual_stepper$amwoDataID, 
+                             tableHeight = "800px",
+                             allowInsertRow = FALSE,
+                             allowDeleteRow = FALSE) %>% 
     renderExcel()
   
   getColor <- function(state) {
@@ -68,8 +72,8 @@ server <- function(input, output) {
       } else if(states == 2) {
         "orange"} 
         else {
-        "red"
-      } }) %>% unname() #to fix the JSON bug
+          "red"
+        } }) %>% unname() #to fix the JSON bug
   }
   
   individual_stepper$icons <- awesomeIcons(
@@ -115,8 +119,10 @@ server <- function(input, output) {
       individual_stepper$amwoDataID <- subset(amwoData.sm, amwoData.sm$ID==individual_stepper$current_id) %>% 
         dplyr::select("ID", "point_state", "time", "x", "y")
       
-      output$table <- individual_stepper$amwoDataID %>% 
-        renderExcel(excelTable(data = ., tableHeight = "800px"))
+      output$table <- renderExcel(excelTable(data = individual_stepper$amwoDataID, 
+                                             tableHeight = "800px",
+                                             allowInsertRow = FALSE,
+                                             allowDeleteRow = FALSE))
       
       individual_stepper$icons <- awesomeIcons(
         icon = 'ios-close',
@@ -132,11 +138,39 @@ server <- function(input, output) {
                          time = time,
                          mortality_signal = ifelse(point_state %in% c(1,2), 0, 1)) %>% 
         readr::write_csv(file = "mortality_data_movebank_upload.csv", 
-                  na = "", 
-                  eol = "\r\n")
+                         na = "", 
+                         eol = "\r\n")
       
       individual_stepper$compiled <- 1
     }
+  })
+  
+  observeEvent(input$setAlive, {
+    individual_stepper$amwoDataID$point_state <- 1
+    
+    output$table <- renderExcel(excelTable(data = individual_stepper$amwoDataID, 
+                                           tableHeight = "800px",
+                                           allowInsertRow = FALSE,
+                                           allowDeleteRow = FALSE))
+    
+    individual_stepper$icons <- awesomeIcons(
+      icon = 'ios-close',
+      iconColor = 'black',
+      library = 'ion',
+      markerColor = getColor(individual_stepper$amwoDataID)
+    )
+    
+    # leafletProxy(mapId = "plot") %>%
+    #   clearShapes() %>% 
+    #   clearMarkers() %>% 
+    #   addAwesomeMarkers(lng=individual_stepper$amwoDataID$x, 
+    #                     lat=individual_stepper$amwoDataID$y, 
+    #                     icon=individual_stepper$icons,
+    #                     popup = individual_stepper$amwoDataID$time) %>%  
+    #   addPolylines(lng =individual_stepper$amwoDataID$x, 
+    #                lat = individual_stepper$amwoDataID$y, 
+    #                weight=3, color="red")
+    
   })
   
   #Overwrite new_locations and colors with user inputs when edited
@@ -153,7 +187,7 @@ server <- function(input, output) {
   output$compile_status <- renderText({
     if(individual_stepper$compiled == 0){
       #individual_stepper$current_id
-
+      
       if(any(individual_stepper$amwoDataID$point_state == 3)){
         centroid <- individual_stepper$amwoDataID %>% 
           filter(point_state == 3) %>%
@@ -166,11 +200,17 @@ server <- function(input, output) {
           st_distance(centroid) %>% 
           as.numeric() %>% 
           quantile(probs = 0.5)
+        
+        num_rows <- individual_stepper$amwoDataID %>% 
+          filter(point_state == 3) %>% 
+          nrow()
+          
       } else{
         threshold_dist <- 0
+        num_rows <- 0
       }
       
-      paste0("50% threshold: ", threshold_dist, " m")
+      paste0("50% threshold: ", threshold_dist, " (", num_rows, " mort locs)")
       
     } else{
       "Mortality data compiled: ready for upload"
