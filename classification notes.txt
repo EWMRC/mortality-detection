@@ -1,0 +1,19 @@
+NC-2021-21 borderline, but fits parameters so calling it dead
+PA-2019-18 was completely stationary for an extended period of time, and then started moving again. calling this alive.
+QUE-2019-11 fits threshold, but barely. Not many points, no boxing. Overrulling and calling this alive.
+LA-2022-10 potentially dead since 2022-2-10, but slightly outside of distance parameters. In same area it was when living. Not changing.
+
+Were set as alive, revise to dead:
+--LA-2022-01 likely dead since 2022-1-31 14:06:56, but only 10 points so classified as alive. Transmitter recovered, confirmed dead.
+--NJ-2018-01 suspicous (roadside for 2 months, correct amount of variation), but too few points. Starting 2019-1-06. Transmitter recovered, confirmed dead.
+--NJ-2019-19 very likely death starting on 3/17/2020, but too few points (10). In a small radius for 3 months. Calling it alive, marking it dead in post.
+--NJ-2019-25 likely death starting on 2020-02-15. Nearly 3 months w/in 14.6 m threshold. This is a tough one, but I'm going to revise it as dead
+--NS-2019-02 almost certainly dead starting on 2020-02-19, but one point too few. Calling it alive, marking it dead in post.
+--NY-2019-19 probably dead starting after 2019-12-16, but distance is just over the trheshold. Calling it alive, marking it dead in post.
+--NY-2022-46 almost certainly dead starting on 2022-05-23, but just just over the threshold. Calling it alive, marking it dead in post.
+--RI-2018-02, nearly hits threshold, but not quite. Likely dead after 2018-12-19. Calling it alive, marking it dead in post.
+--RI-2021-52, very likely dead starting on 2022-02-10 but 1 too few points. Calling it alive, marking it dead in post.
+--VA-2019-16 almost certainly dead starting 2019-02-10, too few locations. Calling it alive, marking it dead in post.
+
+
+
