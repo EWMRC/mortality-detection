@@ -1,0 +1,42 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(move)
+```
+
+
+```{r}
+mortality_classification <- read_csv("mortality_data_revised_by_judgement.csv",
+                                     col_types = cols(time = col_datetime(
+                                       format = "%Y-%m-%dT%H:%M:%SZ")))
+```
+
+How many mortalities are in the dataset?
+```{r}
+dead_birds <- mortality_classification %>% 
+  filter(mortality_signal == 1) %>% 
+  pull(ID) %>% 
+  unique() 
+```
+
+Create a key to join these locations back to the movebank dataset
+```{r}
+amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = readRDS("movebank_credentials.rds"), removeDuplicatedTimestamps=TRUE, timestamp_end = "20220731000000000") %>% 
+  as.data.frame()
+
+amwo_data <- amwo_data %>% 
+  dplyr::transmute(event_id = event_id, ID = local_identifier, time = timestamp)
+```
+
+Join mortality data to the larger dataset
+```{r}
+t <- amwo_data %>% 
+  full_join(mortality_classification)
+
+q <- t %>% 
+  filter(is.na(event_id))
+```

@@ -138,7 +138,7 @@ server <- function(input, output) {
         dplyr::transmute(ID = ID,
                          time = time,
                          mortality_signal = ifelse(point_state %in% c(1,2), 0, 1)) %>% 
-        readr::write_csv(file = "mortality_data_movebank_upload.csv", 
+        readr::write_csv(file = "mortality_data_according_to_rules.csv", 
                          na = "", 
                          eol = "\r\n")
       
