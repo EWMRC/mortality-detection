@@ -1762,59 +1762,70 @@ library(move)</code></pre>
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uIDwtIHJlYWRfY3N2KFwibW9ydGFsaXR5X2RhdGFfcmV2aXNlZF9ieV9qdWRnZW1lbnQuY3N2XCIsXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY29sX3R5cGVzID0gY29scyh0aW1lID0gY29sX2RhdGV0aW1lKFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZm9ybWF0ID0gXCIlWS0lbS0lZFQlSDolTTolU1pcIikpKVxuYGBgIn0= -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uIDwtIHJlYWRfY3N2KFwibW9ydGFsaXR5X2RhdGFfcmV2aXNlZF9ieV9qdWRnZW1lbnQuY3N2XCIsXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY29sX3R5cGVzID0gY29scyh0aW1lID0gY29sX2RhdGV0aW1lKFxuICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZm9ybWF0ID0gXCIlWS0lbS0lZFQlSDolTTolU1pcIikpKSAlPiUgXG4gIGRwbHlyOjpzZWxlY3QoSUQsIGV2ZW50X2lkLCBtb3J0YWxpdHlfc2lnbmFsKVxuYGBgIn0= -->
 <pre class="r"><code>mortality_classification &lt;- read_csv(&quot;mortality_data_revised_by_judgement.csv&quot;,
                                      col_types = cols(time = col_datetime(
-                                       format = &quot;%Y-%m-%dT%H:%M:%SZ&quot;)))</code></pre>
+                                       format = &quot;%Y-%m-%dT%H:%M:%SZ&quot;))) %&gt;% 
+  dplyr::select(ID, event_id, mortality_signal)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>How many mortalities are in the dataset?</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uICU+JSBcbiAgZmlsdGVyKG1vcnRhbGl0eV9zaWduYWwgPT0gMSkgJT4lIFxuICBwdWxsKElEKSAlPiUgXG4gIHVuaXF1ZSgpXG5cbmBgYCJ9 -->
-<pre class="r"><code>mortality_classification %&gt;% 
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGVhZF9iaXJkcyA8LSBtb3J0YWxpdHlfY2xhc3NpZmljYXRpb24gJT4lIFxuICBmaWx0ZXIobW9ydGFsaXR5X3NpZ25hbCA9PSAxKSAlPiUgXG4gIHB1bGwoSUQpICU+JSBcbiAgdW5pcXVlKCkgXG5cbm1vcnRhbGl0eV9jbGFzc2lmaWNhdGlvbiA8LSBtb3J0YWxpdHlfY2xhc3NpZmljYXRpb24gJT4lIFxuICBkcGx5cjo6c2VsZWN0KC1JRClcbmBgYCJ9 -->
+<pre class="r"><code>dead_birds &lt;- mortality_classification %&gt;% 
   filter(mortality_signal == 1) %&gt;% 
   pull(ID) %&gt;% 
-  unique()
-</code></pre>
+  unique() 
+
+mortality_classification &lt;- mortality_classification %&gt;% 
+  dplyr::select(-ID)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiIFsxXSBcIkxBLTIwMjItMDFcIiBcIkxBLTIwMjItMTRcIiBcIk1ELTIwMjAtMTFcIiBcIk5DLTIwMjAtMDlcIiBcIk5DLTIwMjEtMjFcIiBcIk5KLTIwMTgtMDFcIlxuIFs3XSBcIk5KLTIwMTgtMDdcIiBcIk5KLTIwMTgtMTRcIiBcIk5KLTIwMTktMTlcIiBcIk5KLTIwMTktMjVcIiBcIk5KLTIwMTktMjZcIiBcIk5KLTIwMTktMjlcIlxuWzEzXSBcIk5TLTIwMTktMDJcIiBcIk5ZLTIwMTktMTlcIiBcIk5ZLTIwMjItNDZcIiBcIlJJLTIwMTgtMDJcIiBcIlJJLTIwMjEtNTJcIiBcIlZBLTIwMTktMTZcIlxuWzE5XSBcIlZBLTIwMTktMjRcIiBcIlZBLTIwMjAtODJcIlxuIn0= -->
-<pre><code> [1] &quot;LA-2022-01&quot; &quot;LA-2022-14&quot; &quot;MD-2020-11&quot; &quot;NC-2020-09&quot; &quot;NC-2021-21&quot; &quot;NJ-2018-01&quot;
- [7] &quot;NJ-2018-07&quot; &quot;NJ-2018-14&quot; &quot;NJ-2019-19&quot; &quot;NJ-2019-25&quot; &quot;NJ-2019-26&quot; &quot;NJ-2019-29&quot;
-[13] &quot;NS-2019-02&quot; &quot;NY-2019-19&quot; &quot;NY-2022-46&quot; &quot;RI-2018-02&quot; &quot;RI-2021-52&quot; &quot;VA-2019-16&quot;
-[19] &quot;VA-2019-24&quot; &quot;VA-2020-82&quot;</code></pre>
-<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>Create a key to join these locations back to the movebank dataset</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYW13b19kYXRhIDwtIGdldE1vdmViYW5rRGF0YShzdHVkeSA9IFwiQW1lcmljYW4gV29vZGNvY2sgTWlncmF0aW9uIEVjb2xvZ3kgaW4gRWFzdGVybiBOb3J0aCBBbWVyaWNhXCIsIGxvZ2luID0gcmVhZFJEUyhcIm1vdmViYW5rX2NyZWRlbnRpYWxzLnJkc1wiKSwgcmVtb3ZlRHVwbGljYXRlZFRpbWVzdGFtcHM9VFJVRSwgdGltZXN0YW1wX2VuZCA9IFwiMjAyMjA3MzEwMDAwMDAwMDBcIikgJT4lIGFzLmRhdGEuZnJhbWUoKVxuXG5gYGAifQ== -->
-<pre class="r"><code>amwo_data &lt;- getMovebankData(study = &quot;American Woodcock Migration Ecology in Eastern North America&quot;, login = readRDS(&quot;movebank_credentials.rds&quot;), removeDuplicatedTimestamps=TRUE, timestamp_end = &quot;20220731000000000&quot;) %&gt;% as.data.frame()
-</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYW13b19kYXRhIDwtIGdldE1vdmViYW5rRGF0YShzdHVkeSA9IFwiQW1lcmljYW4gV29vZGNvY2sgTWlncmF0aW9uIEVjb2xvZ3kgaW4gRWFzdGVybiBOb3J0aCBBbWVyaWNhXCIsIGxvZ2luID0gcmVhZFJEUyhcIm1vdmViYW5rX2NyZWRlbnRpYWxzLnJkc1wiKSwgcmVtb3ZlRHVwbGljYXRlZFRpbWVzdGFtcHM9VFJVRSwgdGltZXN0YW1wX2VuZCA9IFwiMjAyMjA3MzEwMDAwMDAwMDBcIikgJT4lIFxuICBhcy5kYXRhLmZyYW1lKClcblxuYW13b19kYXRhIDwtIGFtd29fZGF0YSAlPiUgXG4gIGRwbHlyOjpzZWxlY3QoZXZlbnRfaWQpXG5gYGAifQ== -->
+<pre class="r"><code>amwo_data &lt;- getMovebankData(study = &quot;American Woodcock Migration Ecology in Eastern North America&quot;, login = readRDS(&quot;movebank_credentials.rds&quot;), removeDuplicatedTimestamps=TRUE, timestamp_end = &quot;20220731000000000&quot;) %&gt;% 
+  as.data.frame()
+
+amwo_data &lt;- amwo_data %&gt;% 
+  dplyr::select(event_id)</code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiV2FybmluZzogVGhlcmUgYXJlIHRpbWVzdGFtcHMgMSBpbiB0aGUgdW51c2VkIGRhdGEgdGhhdCBhcmUgYWxzbyBpbiB0aGUgcmVhbCBkYXRhLCB0aG9zZSByZWNvcmRzIGFyZSBvbWl0dGVkcmVtb3ZlRHVwaWxjYXRlZFRpbWVzdGFtcHMgd2FzIHNldCB0byBUUlVFLCB0aGlzIHdpbGwgcmV0YWluIHRoZSBmaXJzdCBvZiBtdWx0aXBsZSByZWNvcmRzIHdpdGggdGhlIHNhbWUgYW5pbWFsIElEIGFuZCB0aW1lc3RhbXAsIGFuZCByZW1vdmUgYW55IHN1YnNlcXVlbnQgZHVwbGljYXRlc1xuV2FybmluZzogMSBsb2NhdGlvbihzKSBpcy9hcmUgcmVtb3ZlZCBieSByZW1vdmVEdXBsaWNhdGVkVGltZXN0YW1wc1xuIn0= -->
-<pre><code>Warning: There are timestamps 1 in the unused data that are also in the real data, those records are omittedremoveDupilcatedTimestamps was set to TRUE, this will retain the first of multiple records with the same animal ID and timestamp, and remove any subsequent duplicates
-Warning: 1 location(s) is/are removed by removeDuplicatedTimestamps</code></pre>
-<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <p>Join mortality data to the larger dataset</p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucSA8LSB0ICU+JSBcbmBgYFxuXG5gYGAifQ== -->
-<pre class="r"><code>q &lt;- t %&gt;% </code></pre>
-<pre><code>
-&lt;!-- rnb-source-end --&gt;
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYW13b19kYXRhX2pvaW5lZCA8LSBhbXdvX2RhdGEgJT4lIFxuICBmdWxsX2pvaW4obW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uKVxuXG5pZihucm93KGFtd29fZGF0YV9qb2luZWQpICE9IG5yb3coYW13b19kYXRhKSl7ICNRdWljayBjaGVjazogZW5zdXJlIHRoYXQgdGhlcmUgYXJlIG5vIGV2ZW50IGlkcyBpbiBtb3J0YWxpdHlfY2xhc3NpZmljYXRpb24gdGhhdCBhcmVuJ3QgaW4gYW13b19kYXRhXG4gIHN0b3AoXCJFdmVudCBpZHMgaW4gbW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uIHRoYXQgYXJlbid0IGluIGFtd29fZGF0YVwiKVxufVxuXG5hbXdvX2RhdGFfam9pbmVkIDwtIGFtd29fZGF0YV9qb2luZWQgJT4lICNJZiBOQSwgdGhlbiB0aGUgYmlyZCBpcyBzdGlsbCBhbGl2ZVxuICBtdXRhdGUobW9ydGFsaXR5X3NpZ25hbCA9IGlmX2Vsc2UoaXMubmEobW9ydGFsaXR5X3NpZ25hbCksIDAsIG1vcnRhbGl0eV9zaWduYWwpKVxuYGBgIn0= -->
+<pre class="r"><code>amwo_data_joined &lt;- amwo_data %&gt;% 
+  full_join(mortality_classification)
 
-&lt;!-- rnb-output-begin eyJkYXRhIjoiRXJyb3I6IGF0dGVtcHQgdG8gdXNlIHplcm8tbGVuZ3RoIHZhcmlhYmxlIG5hbWVcbiJ9 --&gt;
-</code></pre>
-<p>Error: attempt to use zero-length variable name ```</p>
-<!-- rnb-output-end -->
+if(nrow(amwo_data_joined) != nrow(amwo_data)){ #Quick check: ensure that there are no event ids in mortality_classification that aren&#39;t in amwo_data
+  stop(&quot;Event ids in mortality_classification that aren&#39;t in amwo_data&quot;)
+}
+
+amwo_data_joined &lt;- amwo_data_joined %&gt;% #If NA, then the bird is still alive
+  mutate(mortality_signal = if_else(is.na(mortality_signal), 0, mortality_signal))</code></pre>
+<!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>Write the results- doing it in small pieces to see if I can get
+anything to work</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuYW13b19kYXRhX2pvaW5lZCAlPiUgXG4gICMgbXV0YXRlKG1vcnRhbGl0eV9zaWduYWwgPSBpZl9lbHNlKG1vcnRhbGl0eV9zaWduYWwgPT0gMCwgTkEsIG1vcnRhbGl0eV9zaWduYWwpKSAlPiUgXG4gIHdyaXRlLmNzdih4ID0gLiwgZmlsZSA9IFwibW9ydGFsaXR5X2RhdGFfZm9yX21vdmViYW5rX3VwbG9hZF80LmNzdlwiLCByb3cubmFtZXMgPSBGQUxTRSwgcXVvdGUgPSBGQUxTRSwgbmEgPSBcIlwiKSAjLCBlb2wgPSBcIlxcclxcblwiLCBmaWxlRW5jb2RpbmcgPSBcIlVURjhcIlxuYGBgIn0= -->
+<pre class="r"><code>amwo_data_joined %&gt;% 
+  # mutate(mortality_signal = if_else(mortality_signal == 0, NA, mortality_signal)) %&gt;% 
+  write.csv(x = ., file = &quot;mortality_data_for_movebank_upload_4.csv&quot;, row.names = FALSE, quote = FALSE, na = &quot;&quot;) #, eol = &quot;\r\n&quot;, fileEncoding = &quot;UTF8&quot;</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpgYGB7cn0NCmxpYnJhcnkodGlkeXZlcnNlKQ0KbGlicmFyeShtb3ZlKQ0KYGBgDQoNCg0KYGBge3J9DQptb3J0YWxpdHlfY2xhc3NpZmljYXRpb24gPC0gcmVhZF9jc3YoIm1vcnRhbGl0eV9kYXRhX3JldmlzZWRfYnlfanVkZ2VtZW50LmNzdiIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgY29sX3R5cGVzID0gY29scyh0aW1lID0gY29sX2RhdGV0aW1lKA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgZm9ybWF0ID0gIiVZLSVtLSVkVCVIOiVNOiVTWiIpKSkNCmBgYA0KDQpIb3cgbWFueSBtb3J0YWxpdGllcyBhcmUgaW4gdGhlIGRhdGFzZXQ/DQpgYGB7cn0NCmRlYWRfYmlyZHMgPC0gbW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uICU+JSANCiAgZmlsdGVyKG1vcnRhbGl0eV9zaWduYWwgPT0gMSkgJT4lIA0KICBwdWxsKElEKSAlPiUgDQogIHVuaXF1ZSgpIA0KYGBgDQoNCkNyZWF0ZSBhIGtleSB0byBqb2luIHRoZXNlIGxvY2F0aW9ucyBiYWNrIHRvIHRoZSBtb3ZlYmFuayBkYXRhc2V0DQpgYGB7cn0NCmFtd29fZGF0YSA8LSBnZXRNb3ZlYmFua0RhdGEoc3R1ZHkgPSAiQW1lcmljYW4gV29vZGNvY2sgTWlncmF0aW9uIEVjb2xvZ3kgaW4gRWFzdGVybiBOb3J0aCBBbWVyaWNhIiwgbG9naW4gPSByZWFkUkRTKCJtb3ZlYmFua19jcmVkZW50aWFscy5yZHMiKSwgcmVtb3ZlRHVwbGljYXRlZFRpbWVzdGFtcHM9VFJVRSwgdGltZXN0YW1wX2VuZCA9ICIyMDIyMDczMTAwMDAwMDAwMCIpICU+JSANCiAgYXMuZGF0YS5mcmFtZSgpDQoNCmFtd29fZGF0YSA8LSBhbXdvX2RhdGEgJT4lIA0KICBkcGx5cjo6dHJhbnNtdXRlKGV2ZW50X2lkID0gZXZlbnRfaWQsIElEID0gbG9jYWxfaWRlbnRpZmllciwgdGltZSA9IHRpbWVzdGFtcCkNCmBgYA0KDQpKb2luIG1vcnRhbGl0eSBkYXRhIHRvIHRoZSBsYXJnZXIgZGF0YXNldA0KYGBge3J9DQp0IDwtIGFtd29fZGF0YSAlPiUgDQogIGZ1bGxfam9pbihtb3J0YWxpdHlfY2xhc3NpZmljYXRpb24pDQoNCnEgPC0gdCAlPiUgDQogIGZpbHRlcihpcy5uYShldmVudF9pZCkpDQpgYGANCg==</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlIgTm90ZWJvb2siDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KDQpgYGB7cn0NCmxpYnJhcnkodGlkeXZlcnNlKQ0KbGlicmFyeShtb3ZlKQ0KYGBgDQoNCmBgYHtyfQ0KbW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uIDwtIHJlYWRfY3N2KCJtb3J0YWxpdHlfZGF0YV9yZXZpc2VkX2J5X2p1ZGdlbWVudC5jc3YiLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGNvbF90eXBlcyA9IGNvbHModGltZSA9IGNvbF9kYXRldGltZSgNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGZvcm1hdCA9ICIlWS0lbS0lZFQlSDolTTolU1oiKSkpICU+JSANCiAgZHBseXI6OnNlbGVjdChJRCwgZXZlbnRfaWQsIG1vcnRhbGl0eV9zaWduYWwpDQpgYGANCg0KSG93IG1hbnkgbW9ydGFsaXRpZXMgYXJlIGluIHRoZSBkYXRhc2V0Pw0KYGBge3J9DQpkZWFkX2JpcmRzIDwtIG1vcnRhbGl0eV9jbGFzc2lmaWNhdGlvbiAlPiUgDQogIGZpbHRlcihtb3J0YWxpdHlfc2lnbmFsID09IDEpICU+JSANCiAgcHVsbChJRCkgJT4lIA0KICB1bmlxdWUoKSANCg0KbW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uIDwtIG1vcnRhbGl0eV9jbGFzc2lmaWNhdGlvbiAlPiUgDQogIGRwbHlyOjpzZWxlY3QoLUlEKQ0KYGBgDQoNCkNyZWF0ZSBhIGtleSB0byBqb2luIHRoZXNlIGxvY2F0aW9ucyBiYWNrIHRvIHRoZSBtb3ZlYmFuayBkYXRhc2V0DQpgYGB7cn0NCmFtd29fZGF0YSA8LSBnZXRNb3ZlYmFua0RhdGEoc3R1ZHkgPSAiQW1lcmljYW4gV29vZGNvY2sgTWlncmF0aW9uIEVjb2xvZ3kgaW4gRWFzdGVybiBOb3J0aCBBbWVyaWNhIiwgbG9naW4gPSByZWFkUkRTKCJtb3ZlYmFua19jcmVkZW50aWFscy5yZHMiKSwgcmVtb3ZlRHVwbGljYXRlZFRpbWVzdGFtcHM9VFJVRSwgdGltZXN0YW1wX2VuZCA9ICIyMDIyMDczMTAwMDAwMDAwMCIpICU+JSANCiAgYXMuZGF0YS5mcmFtZSgpDQoNCmFtd29fZGF0YSA8LSBhbXdvX2RhdGEgJT4lIA0KICBkcGx5cjo6c2VsZWN0KGV2ZW50X2lkKQ0KYGBgDQoNCkpvaW4gbW9ydGFsaXR5IGRhdGEgdG8gdGhlIGxhcmdlciBkYXRhc2V0DQpgYGB7cn0NCmFtd29fZGF0YV9qb2luZWQgPC0gYW13b19kYXRhICU+JSANCiAgZnVsbF9qb2luKG1vcnRhbGl0eV9jbGFzc2lmaWNhdGlvbikNCg0KaWYobnJvdyhhbXdvX2RhdGFfam9pbmVkKSAhPSBucm93KGFtd29fZGF0YSkpeyAjUXVpY2sgY2hlY2s6IGVuc3VyZSB0aGF0IHRoZXJlIGFyZSBubyBldmVudCBpZHMgaW4gbW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uIHRoYXQgYXJlbid0IGluIGFtd29fZGF0YQ0KICBzdG9wKCJFdmVudCBpZHMgaW4gbW9ydGFsaXR5X2NsYXNzaWZpY2F0aW9uIHRoYXQgYXJlbid0IGluIGFtd29fZGF0YSIpDQp9DQoNCmFtd29fZGF0YV9qb2luZWQgPC0gYW13b19kYXRhX2pvaW5lZCAlPiUgI0lmIE5BLCB0aGVuIHRoZSBiaXJkIGlzIHN0aWxsIGFsaXZlDQogIG11dGF0ZShtb3J0YWxpdHlfc2lnbmFsID0gaWZfZWxzZShpcy5uYShtb3J0YWxpdHlfc2lnbmFsKSwgMCwgbW9ydGFsaXR5X3NpZ25hbCkpDQpgYGANCg0KV3JpdGUgdGhlIHJlc3VsdHMtIGRvaW5nIGl0IGluIHNtYWxsIHBpZWNlcyB0byBzZWUgaWYgSSBjYW4gZ2V0IGFueXRoaW5nIHRvIHdvcmsNCmBgYHtyfQ0KYW13b19kYXRhX2pvaW5lZCAlPiUgDQogICMgbXV0YXRlKG1vcnRhbGl0eV9zaWduYWwgPSBpZl9lbHNlKG1vcnRhbGl0eV9zaWduYWwgPT0gMCwgTkEsIG1vcnRhbGl0eV9zaWduYWwpKSAlPiUgDQogIHdyaXRlLmNzdih4ID0gLiwgZmlsZSA9ICJtb3J0YWxpdHlfZGF0YV9mb3JfbW92ZWJhbmtfdXBsb2FkXzQuY3N2Iiwgcm93Lm5hbWVzID0gRkFMU0UsIHF1b3RlID0gRkFMU0UsIG5hID0gIiIpICMsIGVvbCA9ICJcclxuIiwgZmlsZUVuY29kaW5nID0gIlVURjgiDQpgYGANCg0K</div>
 
 
 

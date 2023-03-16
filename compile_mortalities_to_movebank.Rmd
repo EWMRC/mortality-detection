@@ -8,11 +8,11 @@ library(tidyverse)
 library(move)
 ```
 
-
 ```{r}
 mortality_classification <- read_csv("mortality_data_revised_by_judgement.csv",
                                      col_types = cols(time = col_datetime(
-                                       format = "%Y-%m-%dT%H:%M:%SZ")))
+                                       format = "%Y-%m-%dT%H:%M:%SZ"))) %>% 
+  dplyr::select(ID, event_id, mortality_signal)
 ```
 
 How many mortalities are in the dataset?
@@ -21,6 +21,9 @@ dead_birds <- mortality_classification %>%
   filter(mortality_signal == 1) %>% 
   pull(ID) %>% 
   unique() 
+
+mortality_classification <- mortality_classification %>% 
+  dplyr::select(-ID)
 ```
 
 Create a key to join these locations back to the movebank dataset
@@ -29,14 +32,26 @@ amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eas
   as.data.frame()
 
 amwo_data <- amwo_data %>% 
-  dplyr::transmute(event_id = event_id, ID = local_identifier, time = timestamp)
+  dplyr::select(event_id)
 ```
 
 Join mortality data to the larger dataset
 ```{r}
-t <- amwo_data %>% 
+amwo_data_joined <- amwo_data %>% 
   full_join(mortality_classification)
 
-q <- t %>% 
-  filter(is.na(event_id))
+if(nrow(amwo_data_joined) != nrow(amwo_data)){ #Quick check: ensure that there are no event ids in mortality_classification that aren't in amwo_data
+  stop("Event ids in mortality_classification that aren't in amwo_data")
+}
+
+amwo_data_joined <- amwo_data_joined %>% #If NA, then the bird is still alive
+  mutate(mortality_signal = if_else(is.na(mortality_signal), 0, mortality_signal))
 ```
+
+Write the results- doing it in small pieces to see if I can get anything to work
+```{r}
+amwo_data_joined %>% 
+  # mutate(mortality_signal = if_else(mortality_signal == 0, NA, mortality_signal)) %>% 
+  write.csv(x = ., file = "mortality_data_for_movebank_upload_4.csv", row.names = FALSE, quote = FALSE, na = "") #, eol = "\r\n", fileEncoding = "UTF8"
+```
+

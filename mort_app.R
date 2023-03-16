@@ -54,11 +54,11 @@ server <- function(input, output) {
   individual_stepper$current_id <- unique(amwoData.sm$ID)[1]
   individual_stepper$amwoDataID <- amwoData.sm %>%
     dplyr::filter(ID == unique(amwoData.sm$ID)[1]) %>% 
-    dplyr::select("ID", "point_state", "time", "x", "y") 
+    dplyr::select("ID", "point_state", "time", "x", "y", "event_id") 
   individual_stepper$catch_df <- data.frame()
   
   # individual_stepper$new_locations <- dplyr::filter(amwoData.sm, ID == unique(amwoData.sm$ID)[1]) %>% 
-  #   dplyr::select("ID", "point_state", "time", "x", "y") 
+  #   dplyr::select("ID", "point_state", "time", "x", "y", "event_id") 
   
   output$table <- excelTable(data = individual_stepper$amwoDataID, 
                              tableHeight = "800px",
@@ -118,7 +118,7 @@ server <- function(input, output) {
       print(individual_stepper$current_id)
       
       individual_stepper$amwoDataID <- subset(amwoData.sm, amwoData.sm$ID==individual_stepper$current_id) %>% 
-        dplyr::select("ID", "point_state", "time", "x", "y")
+        dplyr::select("ID", "point_state", "time", "x", "y", "event_id")
       
       output$table <- renderExcel(excelTable(data = individual_stepper$amwoDataID, 
                                              tableHeight = "800px",

@@ -24,7 +24,8 @@ amwo_data <- amwo_data %>%
             tagtype = comments,
             sex = sex,
             age = taxon_detail,
-            altitude = height_above_msl)
+            altitude = height_above_msl,
+            event_id = event_id)
 ```
 
 Remove individuals with fewer than 3 locations, recording which ones were removed
@@ -52,7 +53,7 @@ Now trying with full subset
 ```{r}
 amwo_data_subsampled <- amwo_data %>% 
   # filter(ID %in% c("VA-2019-24", "NJ-2019-26", "NJ-2019-25", "LA-2022-14", "NJ-2018-14", "SC-2019-09", "SC-2019-04")) %>% # Colby's identified deaths
-  dplyr::select(ID, time, x, y) %>% 
+  dplyr::select(ID, time, x, y, event_id) %>% 
   mutate(test = FALSE) %>% 
   group_by(ID) %>%
   mutate(ranks = row_number()) %>%
@@ -70,6 +71,7 @@ ground_test <- read_csv("ground_test_2_rformat.csv",
          time = `GMT Time`,
          x = Longitude,
          y = Latitude,
+         event_id = 0,
          test = TRUE) %>% 
   group_by(ID) %>%
   mutate(ranks = row_number()) %>%
@@ -206,7 +208,7 @@ mod_vit <- amwo_hmm %>%
 mod
 ```
 
-Save for 
+Save results for supervised classification in the app 
 ```{r}
 saveRDS(mod_vit, file = "predicted_mortalities.rds")
 saveRDS(individuals_removed_for_too_few_locations, file = "birds_removed.rds")
