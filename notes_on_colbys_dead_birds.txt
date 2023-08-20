@@ -5,3 +5,7 @@ SC-2019-09 clearly not dead. Points dispersed over hundreds of feet
 LA-2022-14 perfect example of a dead bird, clear boxing in a small radius
 NJ-2018-14 holds tight (less than 82 feet diameter) but no clear boxing, and I'm not convinced it's dead
 SC-2019-04 diameter 200 feet, no boxing. Really unconvinced that this bird is dead.
+
+Birds that Colby identified that I revised as alive:
+SC-2019-04 has a 50% threshold: 39.8024846642466 (50 mort locs)
+SC-2019-09 has a 50% threshold: 46.7150761357398 (45 mort locs)

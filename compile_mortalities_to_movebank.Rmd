@@ -28,7 +28,7 @@ mortality_classification <- mortality_classification %>%
 
 Create a key to join these locations back to the movebank dataset
 ```{r}
-amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = readRDS("movebank_credentials.rds"), removeDuplicatedTimestamps=TRUE, timestamp_end = "20220731000000000") %>% 
+amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = readRDS(here::here("movebank_credentials.rds")), removeDuplicatedTimestamps=TRUE, timestamp_end = "20220731000000000") %>% 
   as.data.frame()
 
 amwo_data <- amwo_data %>% 
