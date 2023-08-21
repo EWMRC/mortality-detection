@@ -13,7 +13,7 @@ library(furrr)
 ```
 
 ```{r}
-amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = readRDS("movebank_credentials.rds"), removeDuplicatedTimestamps=TRUE, timestamp_end = "20220731000000000") %>% as.data.frame()
+amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = readRDS(here::here("movebank_credentials.rds")), removeDuplicatedTimestamps=TRUE, timestamp_end = "20230731000000000") %>% as.data.frame()
 
 amwo_data <- amwo_data %>%
   transmute(ID = local_identifier,
@@ -25,7 +25,8 @@ amwo_data <- amwo_data %>%
             sex = sex,
             age = taxon_detail,
             altitude = height_above_msl,
-            event_id = event_id)
+            event_id = event_id,
+            mortality_status = mortality_status)
 ```
 
 Remove individuals with fewer than 3 locations, recording which ones were removed
@@ -44,21 +45,23 @@ birds_to_keep <- amwo_data %>%
   filter(n > 2) %>%
   pull(ID)
 
+too_few_locs <- amwo_data %>% #save these to drop into the compile mortalities script
+  filter(!(ID %in% birds_to_keep)) %>% 
+  filter(is.na(mortality_status)) %>% 
+  transmute(event_id = event_id,
+            mortality_status = 0)
+
 amwo_data <- amwo_data %>%
   filter(ID %in% birds_to_keep)
 ```
 
-Trial code: reduce to a few individuals with known deaths to see if this works
-Now trying with full subset
 ```{r}
 amwo_data_subsampled <- amwo_data %>% 
-  # filter(ID %in% c("VA-2019-24", "NJ-2019-26", "NJ-2019-25", "LA-2022-14", "NJ-2018-14", "SC-2019-09", "SC-2019-04")) %>% # Colby's identified deaths
-  dplyr::select(ID, time, x, y, event_id) %>% 
+  dplyr::select(ID, time, x, y, event_id, mortality_status) %>% 
   mutate(test = FALSE) %>% 
   group_by(ID) %>%
   mutate(ranks = row_number()) %>%
   mutate(known = NA) %>% 
-  #mutate(known = ifelse(ranks == 1, 1, NA)) %>%
   ungroup() %>% 
   dplyr::select(-ranks)
 ```
@@ -83,63 +86,9 @@ ground_test <- read_csv("ground_test_2_rformat.csv",
 amwo_data_subsampled <- bind_rows(ground_test, amwo_data_subsampled)
 ```
 
-Determine the mean distance to the nearest 5 points
-```{r}
-# plan(sequential)
-# 
-# amwo_data_subsampled$mean_dist_5 <- amwo_data_subsampled %>% 
-#   dplyr::select(ID, x, y) %>% 
-#   future_pmap(function(ID_iter, x_iter, y_iter){
-#     
-#     iter_sf <- data.frame(x = x_iter, y = y_iter) %>% 
-#       st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE)
-#     
-#     other_locs <- amwo_data_subsampled %>%
-#       st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE) %>%
-#       filter(ID == ID_iter)
-#     
-#     st_distance(x = iter_sf, y = other_locs) %>% 
-#       as.numeric() %>%
-#       sort() %>%
-#       .[2:6] %>% 
-#       mean(na.rm = TRUE) %>% 
-#       return()
-#   }) %>% 
-#   unlist()
-# 
-# plan(sequential)
-```
-
-Determine the mean distance to the nearest 10 points
-```{r}
-# plan(sequential)
-# 
-# amwo_data_subsampled$mean_dist_10 <- amwo_data_subsampled %>% 
-#   dplyr::select(ID, x, y) %>% 
-#   future_pmap(function(ID_iter, x_iter, y_iter){
-#     
-#     iter_sf <- data.frame(x = x_iter, y = y_iter) %>% 
-#       st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE)
-#     
-#     other_locs <- amwo_data_subsampled %>%
-#       st_as_sf(coords = c("x", "y"), crs = 4326, remove = FALSE) %>%
-#       filter(ID == ID_iter)
-#     
-#     st_distance(x = iter_sf, y = other_locs) %>% 
-#       as.numeric() %>%
-#       sort() %>%
-#       .[2:11] %>% 
-#       mean(na.rm = TRUE) %>% 
-#       return()
-#   }) %>% 
-#   unlist()
-# 
-# plan(sequential)
-```
-
 Determine the mean distance to the nearest 15 points
 ```{r}
-plan(sequential)
+plan(multisession, workers = 8)
 
 amwo_data_subsampled$mean_dist_15 <- amwo_data_subsampled %>% 
   dplyr::select(ID, x, y) %>% 
@@ -201,16 +150,34 @@ mod <- fitHMM(data=amwo_hmm, nbStates=3, dist=dist, Par0 = Par0_m1,
                knownStates = ks,
                #formula = ~step_cov, #state 2 to 3. page 47 of vignette shows how to create the beta matrix
                stateNames = stateNames)
-  
+
 mod_vit <- amwo_hmm %>% 
   mutate(point_state = viterbi(mod))
 
 mod
 ```
 
-Save results for supervised classification in the app 
+Only classify mortalities for individuals with unclassified points
 ```{r}
-saveRDS(mod_vit, file = "predicted_mortalities.rds")
-saveRDS(individuals_removed_for_too_few_locations, file = "birds_removed.rds")
+mod_vit_complete <- mod_vit
+
+animals_to_keep <- mod_vit %>% 
+  filter(is.na(mortality_status) & event_id != 0) %>% 
+  pull(ID) %>% 
+  unique()
+
+mod_vit <- mod_vit %>% 
+  filter(ID %in% animals_to_keep)
+```
+
+Save results for supervised classification in the app
+```{r}
+saveRDS(mod_vit_complete, file = "full_viterbi_predictions.rds")
+
+mod_vit %>% 
+  dplyr::select(-mortality_status) %>% 
+  saveRDS(file = "predicted_mortalities.rds")
+
+saveRDS(too_few_locs, file = "too_few_locs.rds")
 ```
 

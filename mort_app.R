@@ -136,7 +136,7 @@ server <- function(input, output) {
       #Write the resulting file here
       individual_stepper$catch_df %>%
         dplyr::transmute(ID = ID,
-                         time = time,
+                         event_id = event_id,
                          mortality_signal = ifelse(point_state %in% c(1,2), 0, 1)) %>% 
         readr::write_csv(file = "mortality_data_according_to_rules.csv", 
                          na = "", 

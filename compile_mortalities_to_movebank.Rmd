@@ -9,49 +9,41 @@ library(move)
 ```
 
 ```{r}
-mortality_classification <- read_csv("mortality_data_revised_by_judgement.csv",
-                                     col_types = cols(time = col_datetime(
-                                       format = "%Y-%m-%dT%H:%M:%SZ"))) %>% 
-  dplyr::select(ID, event_id, mortality_signal)
+mortality_classification <- read_csv("mortality_data_according_to_rules.csv") %>% 
+  dplyr::select(event_id, mortality_signal)
+
+# If fewer than 3 locations were collected per individual, set mortality signal to 0
+too_few_locs <- readRDS("too_few_locs.rds") %>% 
+  rename(mortality_signal = mortality_status)
+
+mortality_classification <- mortality_classification %>% 
+  bind_rows(too_few_locs)
+
+#join in birds for which a mortality was never predicted, and set their mort state to 0
+all_locs <- readRDS("predicted_mortalities.rds") %>% 
+  dplyr::select(ID, event_id)
+
+all_locs <- all_locs %>% 
+  full_join(mortality_classification) %>% 
+  mutate(mortality_signal = ifelse(is.na(mortality_signal), 0, mortality_signal)) #if mortality signal is NA, return 0
+
 ```
 
 How many mortalities are in the dataset?
 ```{r}
-dead_birds <- mortality_classification %>% 
+dead_birds <- all_locs %>% 
   filter(mortality_signal == 1) %>% 
   pull(ID) %>% 
   unique() 
 
-mortality_classification <- mortality_classification %>% 
+all_locs <- all_locs %>% 
   dplyr::select(-ID)
-```
-
-Create a key to join these locations back to the movebank dataset
-```{r}
-amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = readRDS(here::here("movebank_credentials.rds")), removeDuplicatedTimestamps=TRUE, timestamp_end = "20220731000000000") %>% 
-  as.data.frame()
-
-amwo_data <- amwo_data %>% 
-  dplyr::select(event_id)
-```
-
-Join mortality data to the larger dataset
-```{r}
-amwo_data_joined <- amwo_data %>% 
-  full_join(mortality_classification)
-
-if(nrow(amwo_data_joined) != nrow(amwo_data)){ #Quick check: ensure that there are no event ids in mortality_classification that aren't in amwo_data
-  stop("Event ids in mortality_classification that aren't in amwo_data")
-}
-
-amwo_data_joined <- amwo_data_joined %>% #If NA, then the bird is still alive
-  mutate(mortality_signal = if_else(is.na(mortality_signal), 0, mortality_signal))
 ```
 
 Write the results- doing it in small pieces to see if I can get anything to work
 ```{r}
-amwo_data_joined %>% 
+all_locs %>% 
   # mutate(mortality_signal = if_else(mortality_signal == 0, NA, mortality_signal)) %>% 
-  write.csv(x = ., file = "mortality_data_for_movebank_upload_4.csv", row.names = FALSE, quote = FALSE, na = "") #, eol = "\r\n", fileEncoding = "UTF8"
+  write.csv(x = ., file = "mortality_data_for_movebank_upload_2023.csv", row.names = FALSE, quote = FALSE, na = "") #, eol = "\r\n", fileEncoding = "UTF8"
 ```
 
