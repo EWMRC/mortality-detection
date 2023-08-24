@@ -20,4 +20,6 @@ Were set as alive, revise to dead:
 LA-2023-28 known dead due to recovery
 VT-2022-32 feels a bit iffy, but fits requirements so calling it dead
 LA-2023-33 calling it alive, but iffy
-no edits made according to judgement
+
+judgement (edited directly to Movebank)
+declared VT-2022-30 dead starting on 4/21/2023. Edited directly to the mortality status field.
