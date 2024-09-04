@@ -23,3 +23,5 @@ LA-2023-33 calling it alive, but iffy
 
 judgement (edited directly to Movebank)
 declared VT-2022-30 dead starting on 4/21/2023. Edited directly to the mortality status field.
+
+

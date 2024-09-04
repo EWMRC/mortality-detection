@@ -44,6 +44,6 @@ Write the results- doing it in small pieces to see if I can get anything to work
 ```{r}
 all_locs %>% 
   # mutate(mortality_signal = if_else(mortality_signal == 0, NA, mortality_signal)) %>% 
-  write.csv(x = ., file = "mortality_data_for_movebank_upload_2023.csv", row.names = FALSE, quote = FALSE, na = "") #, eol = "\r\n", fileEncoding = "UTF8"
+  write.csv(x = ., file = "mortality_data_for_movebank_upload_2024.csv", row.names = FALSE, quote = FALSE, na = "") #, eol = "\r\n", fileEncoding = "UTF8"
 ```
 
