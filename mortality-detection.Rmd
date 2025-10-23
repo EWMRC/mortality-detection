@@ -13,7 +13,7 @@ library(furrr)
 ```
 
 ```{r}
-amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = readRDS(here::here("movebank_credentials.rds")), removeDuplicatedTimestamps=TRUE, timestamp_end = "20240731000000000") %>% as.data.frame()
+amwo_data <- getMovebankData(study = "American Woodcock Migration Ecology in Eastern North America", login = readRDS(here::here("movebank_credentials.rds")), removeDuplicatedTimestamps=TRUE, timestamp_end = "20250731000000000") %>% as.data.frame()
 
 amwo_data <- amwo_data %>%
   transmute(ID = local_identifier,

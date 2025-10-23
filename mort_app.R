@@ -92,7 +92,7 @@ server <- function(input, output) {
                                      dragging = TRUE)) %>%
       addTiles() %>% # Default base mape
       addProviderTiles("Esri.WorldImagery") %>%  # ortho image
-      addProviderTiles(providers$Stamen.TonerLines) %>% # state lines and roads.
+      #addProviderTiles(providers$Stamen.TonerLines) %>% # state lines and roads.
       #addProviderTiles(providers$Stamen.TonerLabels) %>% # add location and road labels
       addScaleBar() %>%
       addAwesomeMarkers(lng=individual_stepper$amwoDataID$x, 
